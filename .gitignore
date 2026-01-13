@@ -19,9 +19,7 @@
 .env.production.local
 *.env
 
-/generated/prisma
-/lib/generated/prisma
-/app/generated/prisma
+
 *.db
 *.db-journal
 
