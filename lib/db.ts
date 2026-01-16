@@ -44,7 +44,7 @@ export async function getKataList(): Promise<MateriDetail[]> {
   });
 }
 
-export async function getAllHuruf() {
+export async function getAllHuruf(): Promise<MateriDetail[]> {
   return prisma.materiDetail.findMany({
     where: { materi: { type: "HURUF" } },
     orderBy: { value: "asc" },
