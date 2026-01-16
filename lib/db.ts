@@ -14,7 +14,6 @@ if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 
-/* ================== TYPES ================== */
 export type MateriDetail = {
   id: string;
   value: string;
@@ -22,7 +21,6 @@ export type MateriDetail = {
   audioUrl: string;
 };
 
-/* ================== QUERIES ================== */
 export async function getHurufList(): Promise<MateriDetail[]> {
   return prisma.materiDetail.findMany({
     where: { materi: { type: "HURUF" } },
