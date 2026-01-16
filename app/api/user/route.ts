@@ -1,6 +1,19 @@
 import { prisma } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+type QuizAttemptResult = {
+  id: string;
+  correct: boolean;
+  points: number;
+  createdAt: Date;
+  quiz: {
+    question: string;
+    point: number;
+    materi: {
+      type: string;
+    } | null;
+  } | null;
+};
 
 export async function GET() {
   try {
@@ -29,7 +42,7 @@ export async function GET() {
       });
     }
 
-    const quizAttempts = await prisma.quizAttempt.findMany({
+    const quizAttempts = (await prisma.quizAttempt.findMany({
       where: { userId: dbUser.clerkUserId },
       take: 10,
       orderBy: { createdAt: "desc" },
@@ -46,7 +59,7 @@ export async function GET() {
           },
         },
       },
-    });
+    })) as QuizAttemptResult[];
 
     return NextResponse.json({
       ok: true,
@@ -58,13 +71,13 @@ export async function GET() {
         points: dbUser.points,
         lives: dbUser.lives,
         imageUrl: dbUser.imageUrl,
-        quizHistory: quizAttempts.map((attempt) => ({
+        quizHistory: quizAttempts.map((attempt: QuizAttemptResult) => ({
           id: attempt.id,
           correct: attempt.correct,
           points: attempt.points,
           createdAt: attempt.createdAt,
-          question: attempt.quiz?.question,
-          quizType: attempt.quiz?.materi?.type,
+          question: attempt.quiz?.question ?? null,
+          quizType: attempt.quiz?.materi?.type ?? null,
         })),
       },
     });
