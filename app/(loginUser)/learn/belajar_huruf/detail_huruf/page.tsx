@@ -1,5 +1,5 @@
 import { getAllHuruf } from "@/lib/db";
-
+import LearnLayout from "@/components/learnLayout";
 import DetailHurufClient from "./DetailHurufClient";
 
 export default async function Page({
@@ -14,5 +14,9 @@ export default async function Page({
 
   if (!huruf) return <div>Huruf tidak ditemukan</div>;
 
-  return <DetailHurufClient huruf={huruf} listHuruf={listHuruf} />;
+  return (
+    <LearnLayout title="Belajar Huruf">
+      <DetailHurufClient huruf={huruf} listHuruf={listHuruf} />;
+    </LearnLayout>
+  );
 }

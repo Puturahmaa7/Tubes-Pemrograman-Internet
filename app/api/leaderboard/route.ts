@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { prisma } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
@@ -5,6 +7,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const user = await currentUser();
+
     const users = await prisma.user.findMany({
       select: {
         id: true,
@@ -15,31 +18,32 @@ export async function GET() {
         lives: true,
         createdAt: true,
       },
-      orderBy: {
-        points: "desc",
-      },
+      orderBy: { points: "desc" },
       take: 100,
     });
 
-    const usersWithRank = users.map((user, index) => ({
-      ...user,
-      rank: index + 1,
+    const usersWithRank = users.map((u, i) => ({
+      ...u,
+      rank: i + 1,
     }));
 
-    let currentUserRank = null;
+    let currentUserRank: number | null = null;
     let currentUserData = null;
+
     if (user) {
       currentUserData = usersWithRank.find((u) => u.clerkUserId === user.id);
+
       if (currentUserData) {
         currentUserRank = currentUserData.rank;
       } else {
         const usersAbove = await prisma.user.count({
           where: {
             points: {
-              gt: users[users.length - 1]?.points || 0,
+              gt: users[users.length - 1]?.points ?? 0,
             },
           },
         });
+
         currentUserRank = usersAbove + 1;
 
         const userFromDb = await prisma.user.findUnique({
@@ -63,23 +67,16 @@ export async function GET() {
       }
     }
 
-    const competitors: any[] = [];
-
-    if (currentUserRank && currentUserData) {
-      const usersAbove = usersWithRank
-        .filter((u) => u.rank < currentUserRank)
-        .slice(-2);
-
-      const usersBelow = usersWithRank
-        .filter((u) => u.rank > currentUserRank)
-        .slice(0, 2);
-
-      const allCompetitors = [...usersAbove, currentUserData, ...usersBelow];
-
-      allCompetitors.sort((a, b) => (a.rank || 0) - (b.rank || 0));
-
-      competitors.push(...allCompetitors);
-    }
+    const competitors =
+      currentUserRank && currentUserData
+        ? [
+            ...usersWithRank.filter((u) => u.rank < currentUserRank).slice(-2),
+            currentUserData,
+            ...usersWithRank
+              .filter((u) => u.rank > currentUserRank)
+              .slice(0, 2),
+          ].sort((a, b) => a.rank - b.rank)
+        : [];
 
     return NextResponse.json({
       success: true,
