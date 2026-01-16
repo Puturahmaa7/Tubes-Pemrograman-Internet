@@ -1,6 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
+type Quiz = {
+  id: string;
+  question: string;
+  answer: string;
+  options: string[];
+  point: number | null;
+};
+
+type MateriDetail = {
+  value: string;
+  imageUrl: string | null;
+  audioUrl: string | null;
+};
+
 export async function GET() {
   try {
     const materiKata = await prisma.materi.findFirst({
@@ -27,17 +41,14 @@ export async function GET() {
 
     if (!materiKata) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Materi KATA tidak ditemukan",
-        },
+        { success: false, error: "Materi KATA tidak ditemukan" },
         { status: 404 }
       );
     }
 
-    const allQuizzes = materiKata.quizzes;
+    const allQuizzes: Quiz[] = materiKata.quizzes as Quiz[];
 
-    if (!allQuizzes.length) {
+    if (allQuizzes.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -57,9 +68,9 @@ export async function GET() {
       return shuffled;
     };
 
-    const shuffledQuizzes = shuffleArray(allQuizzes);
+    const shuffledQuizzes = shuffleArray<Quiz>(allQuizzes);
 
-    const selectedQuizzes: typeof allQuizzes = [];
+    const selectedQuizzes: Quiz[] = [];
     const usedAnswers = new Set<string>();
 
     for (const quiz of shuffledQuizzes) {
@@ -81,7 +92,7 @@ export async function GET() {
       }
     }
 
-    const detailMap = new Map<string, any>();
+    const detailMap = new Map<string, MateriDetail>();
     materiKata.details.forEach((detail) => {
       detailMap.set(detail.value, detail);
     });
@@ -93,8 +104,8 @@ export async function GET() {
         const detail = detailMap.get(option);
         return {
           value: option,
-          imageUrl: detail?.imageUrl || null,
-          audioUrl: detail?.audioUrl || null,
+          imageUrl: detail?.imageUrl ?? null,
+          audioUrl: detail?.audioUrl ?? null,
         };
       });
 
@@ -103,16 +114,14 @@ export async function GET() {
         question: quiz.question,
         answer: quiz.answer,
         options: shuffleArray([...quiz.options]),
-        point: quiz.point || 10,
+        point: quiz.point ?? 10,
         materiId: materiKata.id,
-        answerImage: answerDetail?.imageUrl || null,
-        answerAudio: answerDetail?.audioUrl || null,
-        optionDetails: optionDetails,
+        answerImage: answerDetail?.imageUrl ?? null,
+        answerAudio: answerDetail?.audioUrl ?? null,
+        optionDetails,
         hasAnswerImage: !!answerDetail?.imageUrl,
         hasAnswerAudio: !!answerDetail?.audioUrl,
-        hasOptionsMedia: optionDetails.some(
-          (detail) => detail.imageUrl || detail.audioUrl
-        ),
+        hasOptionsMedia: optionDetails.some((d) => d.imageUrl || d.audioUrl),
       };
     });
 
