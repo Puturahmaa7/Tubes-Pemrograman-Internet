@@ -4,11 +4,21 @@ import { prisma } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
+type LeaderboardUser = {
+  id: string;
+  clerkUserId: string;
+  name: string | null;
+  imageUrl: string | null;
+  points: number;
+  lives: number;
+  createdAt: Date;
+};
+
 export async function GET() {
   try {
     const user = await currentUser();
 
-    const users = await prisma.user.findMany({
+    const users: LeaderboardUser[] = await prisma.user.findMany({
       select: {
         id: true,
         clerkUserId: true,
