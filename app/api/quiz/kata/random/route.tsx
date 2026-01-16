@@ -17,7 +17,7 @@ type MateriDetail = {
 
 export async function GET() {
   try {
-    const materiKata = await prisma.materi.findFirst({
+    const materiKata = (await prisma.materi.findFirst({
       where: { type: "KATA" },
       include: {
         details: {
@@ -37,7 +37,11 @@ export async function GET() {
           },
         },
       },
-    });
+    })) as {
+      id: string;
+      details: MateriDetail[];
+      quizzes: Quiz[];
+    } | null;
 
     if (!materiKata) {
       return NextResponse.json(
