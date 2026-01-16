@@ -2,6 +2,19 @@ import { prisma } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
+type RecentAttempt = {
+  id: string;
+  correct: boolean;
+  points: number;
+  createdAt: Date;
+  quiz?: {
+    question: string;
+    materi?: {
+      type: string;
+    };
+  } | null;
+};
+
 export async function GET() {
   try {
     const user = await currentUser();
@@ -58,16 +71,16 @@ export async function GET() {
         correctAttempts,
         accuracy:
           totalAttempts > 0 ? (correctAttempts / totalAttempts) * 100 : 0,
-        totalPointsEarned: totalPointsEarned._sum.points || 0,
+        totalPointsEarned: totalPointsEarned._sum.points ?? 0,
         currentPoints: dbUser.points,
         currentLives: dbUser.lives,
-        recentAttempts: recentAttempts.map((attempt) => ({
+        recentAttempts: recentAttempts.map((attempt: RecentAttempt) => ({
           id: attempt.id,
           correct: attempt.correct,
           points: attempt.points,
           createdAt: attempt.createdAt,
-          question: attempt.quiz?.question,
-          quizType: attempt.quiz?.materi?.type,
+          question: attempt.quiz?.question ?? null,
+          quizType: attempt.quiz?.materi?.type ?? null,
         })),
       },
     });
