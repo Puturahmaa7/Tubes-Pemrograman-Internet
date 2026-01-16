@@ -17,7 +17,7 @@ type MateriDetail = {
 
 export async function GET() {
   try {
-    const materiHuruf = await prisma.materi.findFirst({
+    const materiHuruf = (await prisma.materi.findFirst({
       where: { type: "HURUF" },
       include: {
         details: {
@@ -37,7 +37,11 @@ export async function GET() {
           },
         },
       },
-    });
+    })) as {
+      id: string;
+      details: MateriDetail[];
+      quizzes: Quiz[];
+    } | null;
 
     if (!materiHuruf) {
       return NextResponse.json(
@@ -91,9 +95,9 @@ export async function GET() {
         }
       }
     }
-
     const detailMap = new Map<string, MateriDetail>();
-    materiHuruf.details.forEach((detail) => {
+
+    materiHuruf.details.forEach((detail: MateriDetail) => {
       detailMap.set(detail.value, detail);
     });
 

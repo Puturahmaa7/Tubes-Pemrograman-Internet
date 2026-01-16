@@ -17,7 +17,7 @@ type MateriDetail = {
 
 export async function GET() {
   try {
-    const materiSukuKata = await prisma.materi.findFirst({
+    const materiSukuKata = (await prisma.materi.findFirst({
       where: { type: "SUKU_KATA" },
       include: {
         details: {
@@ -37,7 +37,11 @@ export async function GET() {
           },
         },
       },
-    });
+    })) as {
+      id: string;
+      details: MateriDetail[];
+      quizzes: Quiz[];
+    } | null;
 
     if (!materiSukuKata) {
       return NextResponse.json(
@@ -93,7 +97,8 @@ export async function GET() {
     }
 
     const detailMap = new Map<string, MateriDetail>();
-    materiSukuKata.details.forEach((detail) => {
+
+    materiSukuKata.details.forEach((detail: MateriDetail) => {
       detailMap.set(detail.value, detail);
     });
 
